@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:       #0f2044;
+    --navy-mid:   #1a3360;
+    --navy-light: #2a4a80;
+    --blue-soft:  #e8edf5;
+    --blue-muted: #c4d0e8;
+    --bg:         #f2f4f8;
+    --surface:    #ffffff;
+    --stripe:     #f7f9fc;
+    --border:     #dde3ee;
+    --ink:        #0f2044;
+    --ink2:       #5a6a8a;
+    --green:      #1a5c3a;
+    --green-bg:   #e2f4eb;
+    --red:        #8b1a1a;
+    --red-bg:     #fdeaea;
+    --shadow-sm:  0 1px 4px rgba(15,32,68,0.06);
+    --shadow:     0 4px 24px rgba(15,32,68,0.10);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 52px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    margin-bottom: 36px;
+    animation: fadeDown 0.55s ease both;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--navy-light);
+  }
+
+  .eyebrow-text {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--navy-light);
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 4.5vw, 42px);
+    color: var(--navy);
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  .header-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ink2);
+    background: var(--blue-soft);
+    border: 1px solid var(--blue-muted);
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  .header-meta svg { opacity: 0.6; }
+
+  /* ── Summary cards ── */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.55s 0.1s ease both;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 22px 22px 18px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .card-receita .card-accent { background: linear-gradient(90deg, #1a5c3a, #35a86c); }
+  .card-despesa .card-accent { background: linear-gradient(90deg, var(--navy), var(--navy-light)); }
+  .card-saldo   .card-accent { background: linear-gradient(90deg, #8b1a1a, #c94040); }
+
+  .card-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink2);
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(15px, 2.2vw, 21px);
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .card-value.neg { color: var(--red); }
+  .card-value.pos { color: var(--green); }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp 0.55s 0.2s ease both;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr { background: var(--navy); }
+
+  th {
+    color: rgba(255,255,255,0.85);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th.r { text-align: right; }
+  th + th { border-left: 1px solid rgba(255,255,255,0.08); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+
+  tbody tr:nth-child(even) { background: var(--stripe); }
+  tbody tr:hover:not(.total-row) { background: var(--blue-soft); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 13px 20px;
+    font-size: 14px;
+    color: var(--ink);
+    vertical-align: middle;
+  }
+
+  .cell-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink2);
+  }
+
+  .cell-name { font-weight: 500; }
+
+  .r {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-neg { background: var(--red-bg);   color: var(--red);   }
+  .badge-pos { background: var(--green-bg); color: var(--green); }
+
+  /* Total row */
+  .total-row { background: var(--navy-mid) !important; }
+
+  .total-row td {
+    color: #fff;
+    font-weight: 600;
+    padding: 16px 20px;
+    font-size: 13px;
+  }
+
+  .total-row .cell-name {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .total-row .r   { color: #fff; }
+  .total-row .neg { color: #ffaaaa; }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 680px) {
+    .summary { grid-template-columns: 1fr 1fr; }
+    .card-despesa { grid-column: span 2; }
+    .col-id { display: none; }
+    th, td { padding: 11px 13px; }
+  }
+
+  @media (max-width: 480px) {
+    .page { padding: 28px 12px 56px; }
+    .summary { grid-template-columns: 1fr; }
+    .card-despesa { grid-column: auto; }
+    .col-receita { display: none; }
+    td { font-size: 13px; }
+    .badge { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span class="eyebrow-text">Consolidado · 2026</span>
+    </div>
+    <h1>Relatório das Igrejas</h1>
+    <div class="header-meta">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Atualizado em 13 de março de 2026
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="card card-receita">
+      <div class="card-accent"></div>
+      <div class="card-label">Total Receitas</div>
+      <div class="card-value pos">R$ 7.235,34</div>
+    </div>
+    <div class="card card-despesa">
+      <div class="card-accent"></div>
+      <div class="card-label">Total Despesas</div>
+      <div class="card-value">R$ 27.000,01</div>
+    </div>
+    <div class="card card-saldo">
+      <div class="card-accent"></div>
+      <div class="card-label">Saldo Geral</div>
+      <div class="card-value neg">R$ −19.764,67</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-id">ID</th>
+          <th>Igreja</th>
+          <th class="r col-receita">Receita</th>
+          <th class="r">Despesas</th>
+          <th class="r">Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cell-id col-id">00-0000</td>
+          <td class="cell-name">Não Identificado</td>
+          <td class="r col-receita">R$ 1.212,00</td>
+          <td class="r">R$ 0,00</td>
+          <td class="r"><span class="badge badge-pos">R$ 1.212,00</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-0365</td>
+          <td class="cell-name">Alvorada</td>
+          <td class="r col-receita">R$ 2.170,03</td>
+          <td class="r">R$ 5.626,77</td>
+          <td class="r"><span class="badge badge-neg">R$ −3.456,74</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-1338</td>
+          <td class="cell-name">Padre Ulrico</td>
+          <td class="r col-receita">R$ 1.551,02</td>
+          <td class="r">R$ 3.359,23</td>
+          <td class="r"><span class="badge badge-neg">R$ −1.808,21</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-1166</td>
+          <td class="cell-name">Marmeleiro</td>
+          <td class="r col-receita">R$ 100,00</td>
+          <td class="r">R$ 2.855,35</td>
+          <td class="r"><span class="badge badge-neg">R$ −2.755,35</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-2199</td>
+          <td class="cell-name">Verê</td>
+          <td class="r col-receita">R$ 401,00</td>
+          <td class="r">R$ 965,78</td>
+          <td class="r"><span class="badge badge-neg">R$ −564,78</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-0838</td>
+          <td class="cell-name">Três de Maio</td>
+          <td class="r col-receita">R$ 192,00</td>
+          <td class="r">R$ 2.435,44</td>
+          <td class="r"><span class="badge badge-neg">R$ −2.243,44</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-2057</td>
+          <td class="cell-name">Bairro da Luz</td>
+          <td class="r col-receita">R$ 600,21</td>
+          <td class="r">R$ 4.451,00</td>
+          <td class="r"><span class="badge badge-neg">R$ −3.850,79</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-0926</td>
+          <td class="cell-name">México</td>
+          <td class="r col-receita">R$ 487,08</td>
+          <td class="r">R$ 1.553,68</td>
+          <td class="r"><span class="badge badge-neg">R$ −1.066,60</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-0647</td>
+          <td class="cell-name">Nova Prata do Iguaçu</td>
+          <td class="r col-receita">R$ 112,00</td>
+          <td class="r">R$ 1.343,73</td>
+          <td class="r"><span class="badge badge-neg">R$ −1.231,73</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-0842</td>
+          <td class="cell-name">Salto do Lontra</td>
+          <td class="r col-receita">R$ 75,00</td>
+          <td class="r">R$ 965,80</td>
+          <td class="r"><span class="badge badge-neg">R$ −890,80</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-2616</td>
+          <td class="cell-name">Nova Esperança do Sudoeste</td>
+          <td class="r col-receita">R$ 0,00</td>
+          <td class="r">R$ 461,90</td>
+          <td class="r"><span class="badge badge-neg">R$ −461,90</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-1603</td>
+          <td class="cell-name">Cruzeiro do Iguaçu</td>
+          <td class="r col-receita">R$ 0,00</td>
+          <td class="r">R$ 1.259,72</td>
+          <td class="r"><span class="badge badge-neg">R$ −1.259,72</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-2014</td>
+          <td class="cell-name">São Jorge D'Oeste</td>
+          <td class="r col-receita">R$ 335,00</td>
+          <td class="r">R$ 1.427,68</td>
+          <td class="r"><span class="badge badge-neg">R$ −1.092,68</span></td>
+        </tr>
+        <tr>
+          <td class="cell-id col-id">14-1492</td>
+          <td class="cell-name">Paranhos</td>
+          <td class="r col-receita">R$ 0,00</td>
+          <td class="r">R$ 293,93</td>
+          <td class="r"><span class="badge badge-neg">R$ −293,93</span></td>
+        </tr>
+        <tr class="total-row">
+          <td class="col-id"></td>
+          <td class="cell-name">Totais</td>
+          <td class="r col-receita">R$ 7.235,34</td>
+          <td class="r">R$ 27.000,01</td>
+          <td class="r neg">R$ −19.764,67</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
